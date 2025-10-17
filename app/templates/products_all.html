@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Products CRUD</title>
+    <style>
+        table { border-collapse: collapse; width: 80%; margin: 20px auto; }
+        th, td { border: 1px solid #aaa; padding: 8px; text-align: left; }
+        th { background: #eee; }
+        form { margin: 20px auto; width: 80%; }
+        input, button { padding: 6px; margin: 2px; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align:center;">Products</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th><th>Name</th><th>Description</th><th>Price</th><th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="products-table">
+        </tbody>
+    </table>
+
+    <h3 style="text-align:center;">Add / Update Product</h3>
+    <form id="product-form">
+        <input type="hidden" id="product-id">
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="text" id="description" placeholder="Description" required>
+        <input type="number" id="price" placeholder="Price" step="0.01" required>
+        <button type="submit">Save</button>
+        <button type="button" id="clear">Clear</button>
+    </form>
+
+<script>
+async function fetchProducts() {
+    const res = await fetch('/products');
+    const data = await res.json();
+    const tbody = document.getElementById('products-table');
+    tbody.innerHTML = '';
+    data.forEach(p => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>${p.description}</td>
+                <td>${p.price}</td>
+                <td>
+                    <button onclick="editProduct(${p.id})">Edit</button>
+                    <button onclick="deleteProduct(${p.id})">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+async function editProduct(id) {
+    const res = await fetch(`/products/${id}`);
+    const p = await res.json();
+    document.getElementById('product-id').value = p.id;
+    document.getElementById('name').value = p.name;
+    document.getElementById('description').value = p.description;
+    document.getElementById('price').value = p.price;
+}
+
+async function deleteProduct(id) {
+    if(confirm("Delete this product?")) {
+        await fetch(`/products/${id}`, { method: 'DELETE' });
+        fetchProducts();
+    }
+}
+
+document.getElementById('product-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('product-id').value;
+    const product = {
+        Name: document.getElementById('name').value,
+        Description: document.getElementById('description').value,
+        Price: parseFloat(document.getElementById('price').value)
+    };
+
+    if(id) {
+        await fetch(`/products/${id}`, { 
+            method: 'PUT', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify(product)
+        });
+    } else {
+        await fetch('/products', { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify(product)
+        });
+    }
+
+    document.getElementById('product-form').reset();
+    fetchProducts();
+};
+
+document.getElementById('clear').onclick = () => {
+    document.getElementById('product-form').reset();
+};
+
+fetchProducts();
+</script>
+
+</body>
+</html>
