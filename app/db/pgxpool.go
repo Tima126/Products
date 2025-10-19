@@ -11,7 +11,7 @@ var Pool *pgxpool.Pool
 
 func InitPgxPool() {
 
-	dsn := "postgres://admin:12345@localhost:5435/product_db?sslmode=disable"
+	dsn := "postgres://admin:12345@db:5432/product_db?sslmode=disable"
 
 	var err error
 	Pool, err = pgxpool.New(context.Background(), dsn)
